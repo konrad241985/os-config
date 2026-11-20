@@ -26,6 +26,12 @@ in
     enable = true;
     autosuggestion.enable = true;      # ghost text from history
     syntaxHighlighting.enable = true;  # commands turn green when valid
+    historySubstringSearch = {
+      enable = true;
+      # Normal and application cursor-key sequences (WezTerm/Herdr).
+      searchUpKey = [ "^[[A" "^[OA" ];
+      searchDownKey = [ "^[[B" "^[OB" ];
+    };
     initContent = ''
       bindkey '^f' autosuggest-accept
     '';

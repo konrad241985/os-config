@@ -46,6 +46,8 @@ Nix dependencies are locked in `flake.lock`. Homebrew apps follow available upst
 
 ## Daily use
 
+Zsh Up/Down arrows search history for the text currently typed, like Fish. For example, type `cd` and press Up to cycle through commands containing `cd`; Down returns toward newer matches. With an empty command line, the arrows browse all history. Gray autosuggestions and Ctrl+F to accept them remain available.
+
 Mouse interaction is enabled in Neovim (editing modes, command line, help, and prompts), with a right-click context menu. Herdr captures mouse input for its interface, shows pane scrollbars, and keeps selections highlighted until explicitly copied. Option-right-click passes through Herdr to the pane application instead of opening Herdr's pane menu. WezTerm keeps its default mouse bindings; Shift-drag bypasses application mouse handling to select terminal text. Apps without native mouse controls remain keyboard-driven. Neovim needs a restart or config reload after changing these options; Herdr supports `herdr server reload-config`, and WezTerm normally reloads its configuration automatically.
 
 ```sh
