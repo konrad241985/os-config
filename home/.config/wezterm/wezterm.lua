@@ -18,7 +18,21 @@ config.window_decorations = "RESIZE"
 -- Command+arrows switch terminal tabs regardless of the program inside them.
 config.keys = {
 	-- System clipboard; use Shift-drag when an application captures the mouse.
-	{ key = "c", mods = "SUPER", action = wezterm.action.CopyTo("Clipboard") },
+	{
+		key = "c",
+		mods = "SUPER",
+		action = wezterm.action_callback(function(window, pane)
+			local selection = window:get_selection_text_for_pane(pane)
+			local process = (pane:get_foreground_process_name() or ""):match("([^/]+)$")
+			if selection ~= "" then
+				window:perform_action(wezterm.action.CopyTo("Clipboard"), pane)
+			elseif process == "herdr" then
+				-- Kitty encoding of Command+C: Herdr copies its retained mouse selection.
+				-- Unlike Ctrl+C, this does not interrupt a shell when nothing is selected.
+				window:perform_action(wezterm.action.SendString("\x1b[99;9u"), pane)
+			end
+		end),
+	},
 	{ key = "v", mods = "SUPER", action = wezterm.action.PasteFrom("Clipboard") },
 	{ key = "LeftArrow", mods = "SUPER", action = wezterm.action.ActivateTabRelative(-1) },
 	{ key = "RightArrow", mods = "SUPER", action = wezterm.action.ActivateTabRelative(1) },
