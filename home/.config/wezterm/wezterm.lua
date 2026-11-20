@@ -2,6 +2,11 @@ local wezterm = require("wezterm")
 
 local config = wezterm.config_builder()
 
+-- Keep terminal clicks, dragging, and scrolling available. Applications receive
+-- normal mouse events when they request them; Shift-drag selects terminal text.
+config.disable_default_mouse_bindings = false
+config.bypass_mouse_reporting_modifiers = "SHIFT"
+
 config.color_scheme = "rose-pine-moon"
 config.font = wezterm.font("Hack Nerd Font")
 config.font_size = 15.0

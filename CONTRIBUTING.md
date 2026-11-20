@@ -7,7 +7,6 @@ If you found a bug, please open a bug report issue instead of sending a patch.
 Pull requests are auto-closed here so the repo can stay personal and predictable.
 
 ## Bugs
-
 Bug reports are welcome through GitHub Issues only.
 Please use the bug report template and include:
 

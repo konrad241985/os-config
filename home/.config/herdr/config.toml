@@ -13,5 +13,11 @@ goto             = "prefix+g"
 copy_mode  = "prefix+y"  # herdr's copy-mode entry key; copy-mode's own internal keys (v/space select, y/Enter copy, q/Esc cancel) aren't configurable
 
 [ui]
+mouse_capture = true
+pane_scrollbars = true
+# Option-right-click passes through to Neovim instead of Herdr's pane menu.
+right_click_passthrough_modifier = "alt"
+# Keep dragged text highlighted; copy explicitly instead of clearing on release.
+copy_on_select = false
 # Agents panel order: explicit choice of "spaces" (grouped by space, the default) over "priority".
 agent_panel_sort = "spaces"

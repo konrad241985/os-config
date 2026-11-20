@@ -46,6 +46,8 @@ Nix dependencies are locked in `flake.lock`. Homebrew apps follow available upst
 
 ## Daily use
 
+Mouse interaction is enabled in Neovim (editing modes, command line, help, and prompts), with a right-click context menu. Herdr captures mouse input for its interface, shows pane scrollbars, and keeps selections highlighted until explicitly copied. Option-right-click passes through Herdr to the pane application instead of opening Herdr's pane menu. WezTerm keeps its default mouse bindings; Shift-drag bypasses application mouse handling to select terminal text. Apps without native mouse controls remain keyboard-driven. Neovim needs a restart or config reload after changing these options; Herdr supports `herdr server reload-config`, and WezTerm normally reloads its configuration automatically.
+
 ```sh
 cd ~/github/os-config
 ./rebuild.sh
