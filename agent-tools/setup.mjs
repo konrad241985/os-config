@@ -16,32 +16,41 @@ if (!existsSync(stamp) || readFileSync(stamp, 'utf8') !== lock) {
   writeFileSync(stamp, lock);
 }
 
-// This is a separate browser data directory, never the personal Chrome profile.
+// Install the WebKit revision matching the locked Playwright MCP dependency.
+execFileSync(process.execPath, [join(dir, 'node_modules/playwright/cli.js'), 'install', 'webkit'], {
+  env, stdio: 'inherit',
+});
+
+// This is a separate WebKit data directory, never a Chrome profile.
 // Sign into konrad@nodestar.ai manually; the directory does not enforce account identity.
-const browserProfile = join(home, 'Library/Application Support/os-config/playwright-nodestar');
+const browserProfile = join(home, 'Library/Application Support/os-config/playwright-webkit-nodestar');
 mkdirSync(browserProfile, { recursive: true, mode: 0o700 });
 const server = {
   command: '/etc/profiles/per-user/konrad/bin/node',
-  args: [join(home, '.dotfiles/agent-tools/node_modules/@playwright/mcp/cli.js'), '--browser', 'chrome', '--user-data-dir', browserProfile],
+  args: [join(home, '.dotfiles/agent-tools/node_modules/@playwright/mcp/cli.js'), '--browser', 'webkit', '--user-data-dir', browserProfile],
 };
 // Merge just our server. Preserve credentials, other MCP servers, and preferences.
 for (const relative of ['.pi/agent/mcp.json', '.claude.json', '.gemini/settings.json']) {
   const path = join(home, relative);
   const before = existsSync(path) ? readFileSync(path, 'utf8') : null;
   const config = before ? JSON.parse(before) : {};
-  if (JSON.stringify(config.mcpServers?.['playwright-chrome']) === JSON.stringify(server)) continue;
+  if (!config.mcpServers?.['playwright-chrome'] && JSON.stringify(config.mcpServers?.['playwright-webkit']) === JSON.stringify(server)) continue;
   config.mcpServers ??= {};
-  config.mcpServers['playwright-chrome'] = server;
+  delete config.mcpServers['playwright-chrome'];
+  config.mcpServers['playwright-webkit'] = server;
   mkdirSync(dirname(path), { recursive: true });
   if (before !== null) copyFileSync(path, `${path}.before-agent-tools-${Date.now()}`);
   writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`, { mode: 0o600 });
-  console.log(`Configured Playwright Chrome in ${relative}`);
+  console.log(`Configured Playwright WebKit in ${relative}`);
 }
 // Let Codex merge its own TOML, preserving desktop and unrelated settings.
 const codex = join(dir, 'node_modules/.bin/codex');
+const codexConfig = join(home, '.codex/config.toml');
+if (existsSync(codexConfig)) copyFileSync(codexConfig, `${codexConfig}.before-agent-tools-${Date.now()}`);
+execFileSync(codex, ['mcp', 'remove', 'playwright-chrome'], { env, stdio: 'inherit' });
 let current;
 try {
-  current = JSON.parse(execFileSync(codex, ['mcp', 'get', 'playwright-chrome', '--json'], {
+  current = JSON.parse(execFileSync(codex, ['mcp', 'get', 'playwright-webkit', '--json'], {
     env, stdio: ['ignore', 'pipe', 'ignore'], encoding: 'utf8',
   })).transport;
 } catch { /* A fresh installation has no matching server. */ }
@@ -49,7 +58,7 @@ if (current?.command !== server.command || JSON.stringify(current?.args) !== JSO
   const path = join(home, '.codex/config.toml');
   if (existsSync(path)) copyFileSync(path, `${path}.before-agent-tools-${Date.now()}`);
   execFileSync(codex, [
-    'mcp', 'add', 'playwright-chrome', '--', server.command, ...server.args,
+    'mcp', 'add', 'playwright-webkit', '--', server.command, ...server.args,
   ], { env, stdio: 'inherit' });
 }
-console.log(`Agent tools ready. Chrome uses only ${browserProfile}. Sign into konrad@nodestar.ai there.`);
+console.log(`Agent tools ready. WebKit uses only ${browserProfile}. Sign into konrad@nodestar.ai there.`);

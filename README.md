@@ -24,7 +24,7 @@ You may clone into another directory. The fixed link **`/Users/konrad/.dotfiles`
 4. Backs up existing regular `/etc/bashrc` and `/etc/zshrc` files with the same suffix. Existing nix-darwin symlinks are left in place.
 5. Runs the **nix-darwin version pinned by this repository's `flake.lock`**, with `nix-command` and `flakes` enabled and root's home directory selected correctly.
 6. Applies system settings, adopts an existing Homebrew installation, installs declared software, and links personal configuration with Home Manager.
-7. Installs the locked agent tools and merges the `playwright-chrome` MCP connection into Pi, Codex, Claude Code, and Gemini CLI. Rebuild also runs this step, skipping package installation when the lockfile is unchanged.
+7. Installs the locked agent tools and matching WebKit browser, and merges the `playwright-webkit` MCP connection into Pi, Codex, Claude Code, and Gemini CLI, removing the old `playwright-chrome` connection. Rebuild also runs this step, skipping package installation when the lockfile is unchanged.
 
 Conflicting personal configuration files are backed up next to the original as `*.before-nix-darwin`. Existing backups are never deliberately overwritten; if a later manually created file conflicts with an existing backup, preserve/rename that backup before retrying. A failed activation can leave some system settings already applied; fix the reported blocker and rerun bootstrap. Normal reruns reuse Nix, the managed links, and the existing Homebrew installation.
 
@@ -95,15 +95,15 @@ The last command builds the system closure but does not activate it or change ma
 
 `home/AGENTS.md` is the shared agent policy. The inherited `cc` alias runs Claude with `--dangerously-skip-permissions`; `co` runs Codex with `--full-auto`. Git identity is not configured by this repo; set your own name/email separately.
 
-## Coding agents and Chrome
+## Coding agents and WebKit
 
 Open a new terminal after bootstrap/rebuild. Run `pi`, `codex`, `claude`, or `gemini`. Pi is the multi-provider interface; using a Claude/OpenAI/Gemini model inside Pi does not launch those vendors' separate CLI applications.
 
 The npm installation pins **Pi 1.6.0, Codex CLI 0.171.0, Gemini CLI 0.70.0, and Playwright MCP 0.0.86**. Claude Code continues to be managed by Homebrew. Pi uses the current official `@earendil-works/pi-coding-agent` package, which includes native MCP support. No MCP adapter is needed. Use `/login` in Pi to authenticate a supported provider and `/model` to select a model. Each standalone agent has its own sign-in flow.
 
-The `playwright-chrome` MCP server always launches Chrome with `--user-data-dir` fixed to `~/Library/Application Support/os-config/playwright-nodestar`. This persistent browser data directory is separate from your everyday Chrome profile. Sign into **konrad@nodestar.ai** manually in this dedicated browser. Cookies and login sessions persist between launches. No personal Chrome cookies are copied and no extension or connection to the everyday browser is used. This configuration fixes the browser profile; it does not enforce an email-account restriction or sandbox the coding agent's filesystem access.
+The `playwright-webkit` MCP server launches Playwright's WebKit browser (not the Safari app) with `--user-data-dir` fixed to `~/Library/Application Support/os-config/playwright-webkit-nodestar`. Sign into **konrad@nodestar.ai** manually in this dedicated browser. Cookies and login sessions persist between launches. No Chrome cookies are copied and no Chrome extension or connection is used. The old Chrome automation profile is left untouched, but no longer used. This configuration fixes the browser profile; it does not enforce an email-account restriction or sandbox the coding agent's filesystem access.
 
-Ask an agent: "Use playwright-chrome to check my app in the Nodestar browser." In Pi, `/mcp` shows connection status and available tools. **Only one agent can use the persistent profile at a time.** Close/disconnect its browser before switching agents; Chrome locks the profile while it is in use. Each client starts a local MCP process; no permanent background service or public network listener is configured.
+Ask an agent: "Use playwright-webkit to check my app in the Nodestar browser." In Pi, `/mcp` shows connection status and available tools. **Only one agent should use the persistent profile at a time.** Close/disconnect its browser before switching agents. Each client starts a local MCP process; no permanent background service or public network listener is configured.
 
 User-level configuration is merged into `~/.pi/agent/mcp.json`, `~/.codex/config.toml`, `~/.claude.json`, and `~/.gemini/settings.json`. These files remain local, including existing account credentials. The dedicated browser directory is outside the repository and is never committed. Bootstrap cannot reproduce personal logins. Restart existing agent sessions after changing MCP configuration. The old Playwright extension is no longer needed and should be removed from the personal Chrome profile.
 
