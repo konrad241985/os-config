@@ -15,8 +15,19 @@ config.macos_window_background_blur = 50
 config.hide_tab_bar_if_only_one_tab = true
 config.window_decorations = "RESIZE"
 
+-- Forward Command+Option shortcuts to local Herdr using Kitty key encoding.
+local function herdr_tab_action(sequence, fallback)
+	return wezterm.action_callback(function(window, pane)
+		local process = (pane:get_foreground_process_name() or ""):match("([^/]+)$")
+		local action = process == "herdr" and wezterm.action.SendString(sequence) or fallback
+		window:perform_action(action, pane)
+	end)
+end
+
 -- Command+arrows switch terminal tabs regardless of the program inside them.
 config.keys = {
+	{ key = "t", mods = "SUPER|ALT", action = herdr_tab_action("\x1b[116;11u", wezterm.action.SpawnTab("CurrentPaneDomain")) },
+	{ key = "w", mods = "SUPER|ALT", action = herdr_tab_action("\x1b[119;11u", wezterm.action.CloseCurrentTab({ confirm = true })) },
 	-- System clipboard; use Shift-drag when an application captures the mouse.
 	{
 		key = "c",

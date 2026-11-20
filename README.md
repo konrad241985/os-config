@@ -49,6 +49,8 @@ Nix dependencies are locked in `flake.lock`. Homebrew apps follow available upst
 
 Inside Herdr, Option+Left/Right switches tabs and Option+Up/Down switches workspaces directly, with no prefix. The existing Ctrl+B then P/N tab shortcuts still work. These Option+arrow chords are reserved for Herdr navigation while Herdr is focused.
 
+Command+Option+T creates a Herdr tab; Command+Option+W closes the active Herdr tab. The existing prefix shortcuts remain available. Outside local Herdr, these combinations create/close WezTerm tabs instead. Closing a tab closes its panes and can end running commands.
+
 In WezTerm, Command+C copies a terminal selection. When local Herdr is in the foreground and WezTerm has no selection, Command+C is forwarded to Herdr to copy its retained mouse selection: drag normally, then press Command+C. Shift-drag still selects text directly in WezTerm, including over Neovim. With no selection, Command+C leaves the clipboard intact. Command+V pastes into the active application, including the zsh prompt. Control+C remains the shell's interrupt shortcut. Command+Left/Right switches WezTerm tabs.
 
 Zsh Up/Down arrows search history for the text currently typed, like Fish. For example, type `cd` and press Up to cycle through commands containing `cd`; Down returns toward newer matches. With an empty command line, the arrows browse all history. Gray autosuggestions and Ctrl+F to accept them remain available.
