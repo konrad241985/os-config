@@ -26,6 +26,13 @@ in
 
   programs.zsh = {
     enable = true;
+    # Long-running Herdr servers can inherit Home Manager's source-once marker
+    # with an older PATH. Apply this in each shell, outside that guarded script.
+    envExtra = ''
+      typeset -U path PATH
+      path=("$HOME/.dotfiles/agent-tools/node_modules/.bin" "/etc/profiles/per-user/${user}/bin" $path)
+      export PATH
+    '';
     autosuggestion.enable = true;      # ghost text from history
     syntaxHighlighting.enable = true;  # commands turn green when valid
     historySubstringSearch = {
