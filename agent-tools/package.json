@@ -1,0 +1,10 @@
+{
+  "name": "os-config-agent-tools",
+  "private": true,
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "1.6.0",
+    "@openai/codex": "0.171.0",
+    "@google/gemini-cli": "0.70.0",
+    "@playwright/mcp": "0.0.86"
+  }
+}

@@ -22,5 +22,7 @@ if ! command -v nix >/dev/null 2>&1; then
   exit 1
 fi
 NIX_BIN="$(command -v nix)"
-exec sudo -H "$NIX_BIN" --extra-experimental-features "nix-command flakes" \
+sudo -H "$NIX_BIN" --extra-experimental-features "nix-command flakes" \
   run "$DIR#darwin-rebuild" -- switch --flake "$DIR#mac"
+
+/etc/profiles/per-user/konrad/bin/node "$DIR/agent-tools/setup.mjs"

@@ -54,4 +54,6 @@ echo "==> Applying os-config for konrad (flake.lock pins the rebuild tool too)"
 sudo -H "$NIX_BIN" --extra-experimental-features "nix-command flakes" \
   run "$DIR#darwin-rebuild" -- switch --flake "$DIR#mac"
 
+/etc/profiles/per-user/konrad/bin/node "$DIR/agent-tools/setup.mjs"
+
 echo "==> Done. Open a new terminal; use ./rebuild.sh for future changes."

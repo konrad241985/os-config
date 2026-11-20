@@ -24,6 +24,7 @@ You may clone into another directory. The fixed link **`/Users/konrad/.dotfiles`
 4. Backs up existing regular `/etc/bashrc` and `/etc/zshrc` files with the same suffix. Existing nix-darwin symlinks are left in place.
 5. Runs the **nix-darwin version pinned by this repository's `flake.lock`**, with `nix-command` and `flakes` enabled and root's home directory selected correctly.
 6. Applies system settings, adopts an existing Homebrew installation, installs declared software, and links personal configuration with Home Manager.
+7. Installs the locked agent tools and merges the `playwright-chrome` MCP connection into Pi, Codex, Claude Code, and Gemini CLI. Rebuild also runs this step, skipping package installation when the lockfile is unchanged.
 
 Conflicting personal configuration files are backed up next to the original as `*.before-nix-darwin`. Existing backups are never deliberately overwritten; if a later manually created file conflicts with an existing backup, preserve/rename that backup before retrying. A failed activation can leave some system settings already applied; fix the reported blocker and rerun bootstrap. Normal reruns reuse Nix, the managed links, and the existing Homebrew installation.
 
@@ -31,12 +32,12 @@ Conflicting personal configuration files are backed up next to the original as `
 
 - macOS defaults: dark appearance, key repeat, hidden Dock/menu bar/desktop icons, Finder list view, visible extensions, and tap-to-click.
 - Homebrew: **Herdr, WezTerm, Claude Code**.
-- Nix/Home Manager: **ripgrep, fd, fzf, jq, lazygit, Neovim, Hack Nerd Font**, zsh configuration, and Starship prompt.
+- Nix/Home Manager: **ripgrep, fd, fzf, jq, lazygit, Neovim, Node.js 24, Hack Nerd Font**, zsh configuration, and Starship prompt.
 - WezTerm, Neovim, Herdr, and Claude settings from `home/`.
 - Shared agent instructions for Claude, Codex, and OpenCode.
-- Pi settings, model overrides, themes, local extensions, and pinned extension package declarations. Pi itself remains optional, as described below.
+- Pi settings, model overrides, themes, local extensions, and pinned extension package declarations. Pi itself is installed by the locked agent-tools setup below.
 
-This reproduces the **declared setup**, not every app, document, login, or background process on this Mac. It does not copy credentials, browser profiles, SSH keys, agent sessions, or personal data. Authenticate tools separately. Codex, OpenCode, and Pi are not automatically installed merely because their settings or shell aliases exist.
+This reproduces the **declared setup**, not every app, document, login, or background process on this Mac. It does not copy credentials, browser profiles, SSH keys, agent sessions, or personal data. Authenticate tools separately. OpenCode is not installed. Install Chrome separately on each new Mac; no browser extension is required.
 
 Nix dependencies are locked in `flake.lock`. Homebrew apps follow available upstream releases, and the initial Nix installer is fetched from its provider, so this is repeatable configuration rather than a byte-for-byte disk image. Neovim plugins need network access on first launch and use the copied plugin lockfile.
 
@@ -45,6 +46,8 @@ Nix dependencies are locked in `flake.lock`. Homebrew apps follow available upst
 **The retained `homebrew.onActivation.cleanup = "zap"` setting removes Homebrew packages and casks not declared in `configuration.nix`, potentially including application data.** Add software you want to keep to `brews` or `casks` before running either script. `autoMigrate = true` adopts existing Homebrew and keeps its packages during migration; the subsequent cleanup still enforces the declared package list.
 
 ## Daily use
+
+In WezTerm, hold Shift and drag to select terminal text (also when Herdr or Neovim captures the mouse), then press Command+C to copy to the macOS clipboard. Command+V pastes into the active application, including the zsh prompt. Control+C remains the shell's interrupt shortcut. Command+Left/Right switches WezTerm tabs.
 
 Zsh Up/Down arrows search history for the text currently typed, like Fish. For example, type `cd` and press Up to cycle through commands containing `cd`; Down returns toward newer matches. With an empty command line, the arrows browse all history. Gray autosuggestions and Ctrl+F to accept them remain available.
 
@@ -81,18 +84,28 @@ The last command builds the system closure but does not activate it or change ma
 - `home.nix`: user packages, shell, prompt, personal-config backups via the flake's Home Manager settings, and live file links.
 - `bootstrap.sh`: first installation and safe adoption of existing shell configuration.
 - `rebuild.sh`: subsequent activation using the same locked rebuild tool.
+- `agent-tools/package.json` and `package-lock.json`: exact CLI/MCP versions and resolved dependencies; installed into ignored `agent-tools/node_modules`.
+- `agent-tools/setup.mjs`: installs locked packages and merges browser MCP settings, preserving unrelated settings and credentials. Changed JSON files get timestamped local backups.
 - `home/`: the copied authored configuration, not runtime data.
 - `tests/`: the original Pi extension behavior tests.
 
 `home/AGENTS.md` is the shared agent policy. The inherited `cc` alias runs Claude with `--dangerously-skip-permissions`; `co` runs Codex with `--full-auto`. Git identity is not configured by this repo; set your own name/email separately.
 
-## Optional Pi configuration
+## Coding agents and Chrome
 
-Pi is an opt-in CLI, not a dependency this repository vendors. Install it from its owner with the [official Pi instructions](https://pi.dev), for example:
+Open a new terminal after bootstrap/rebuild. Run `pi`, `codex`, `claude`, or `gemini`. Pi is the multi-provider interface; using a Claude/OpenAI/Gemini model inside Pi does not launch those vendors' separate CLI applications.
 
-```sh
-npm install -g --ignore-scripts @earendil-works/pi-coding-agent
-```
+The npm installation pins **Pi 1.6.0, Codex CLI 0.171.0, Gemini CLI 0.70.0, and Playwright MCP 0.0.86**. Claude Code continues to be managed by Homebrew. Pi uses the current official `@earendil-works/pi-coding-agent` package, which includes native MCP support. No MCP adapter is needed. Use `/login` in Pi to authenticate a supported provider and `/model` to select a model. Each standalone agent has its own sign-in flow.
+
+The `playwright-chrome` MCP server always launches Chrome with `--user-data-dir` fixed to `~/Library/Application Support/os-config/playwright-nodestar`. This persistent browser data directory is separate from your everyday Chrome profile. Sign into **konrad@nodestar.ai** manually in this dedicated browser. Cookies and login sessions persist between launches. No personal Chrome cookies are copied and no extension or connection to the everyday browser is used. This configuration fixes the browser profile; it does not enforce an email-account restriction or sandbox the coding agent's filesystem access.
+
+Ask an agent: "Use playwright-chrome to check my app in the Nodestar browser." In Pi, `/mcp` shows connection status and available tools. **Only one agent can use the persistent profile at a time.** Close/disconnect its browser before switching agents; Chrome locks the profile while it is in use. Each client starts a local MCP process; no permanent background service or public network listener is configured.
+
+User-level configuration is merged into `~/.pi/agent/mcp.json`, `~/.codex/config.toml`, `~/.claude.json`, and `~/.gemini/settings.json`. These files remain local, including existing account credentials. The dedicated browser directory is outside the repository and is never committed. Bootstrap cannot reproduce personal logins. Restart existing agent sessions after changing MCP configuration. The old Playwright extension is no longer needed and should be removed from the personal Chrome profile.
+
+To reapply just agent installations/settings after Nix activation, run `node agent-tools/setup.mjs`. Change exact package versions deliberately and regenerate the lockfile with npm; bootstrap/rebuild use `npm ci` rather than floating `latest` installs.
+
+### Additional Pi configuration
 
 [Pi Launcher](https://github.com/kunchenguid/homebrew-tap) is also optional and installed from its owner, not declared by this config:
 
@@ -119,7 +132,7 @@ The versions are immutable pins, so Pi does not move them during package updates
 
 Both packages execute with your full user permissions and must be trusted like any other executable code.
 
-Home Manager deliberately does not manage `~/.pi/agent` itself, or Pi authentication, sessions, trust decisions, caches, npm/git package trees, or any other runtime state. The model overrides contain no credentials or endpoint settings, do not choose a default model, and only take effect after you authenticate Pi yourself. This remains an additive post-video layer: it does not install Pi, a launcher, or package source code into this repository.
+Home Manager deliberately does not manage `~/.pi/agent` itself, or Pi authentication, sessions, trust decisions, caches, npm/git package trees, or any other runtime state. The model overrides contain no credentials or endpoint settings, do not choose a default model, and only take effect after you authenticate Pi yourself. Pi itself is installed by the agent-tools setup above; a launcher is not installed.
 
 ## Notes
 

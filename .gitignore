@@ -10,6 +10,7 @@ home/.config/herdr/session-snapshots/
 .DS_Store
 result
 result-*
+/agent-tools/node_modules/
 
 # Pi credentials and Home Manager adoption backups stay local
 /home/.pi/agent/auth.json

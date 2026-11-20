@@ -9,11 +9,20 @@ config.bypass_mouse_reporting_modifiers = "SHIFT"
 
 config.color_scheme = "rose-pine-moon"
 config.font = wezterm.font("Hack Nerd Font")
-config.font_size = 15.0
+config.font_size = 16.0
 config.window_background_opacity = 0.8
 config.macos_window_background_blur = 50
 config.hide_tab_bar_if_only_one_tab = true
 config.window_decorations = "RESIZE"
+
+-- Command+arrows switch terminal tabs regardless of the program inside them.
+config.keys = {
+	-- System clipboard; use Shift-drag when an application captures the mouse.
+	{ key = "c", mods = "SUPER", action = wezterm.action.CopyTo("Clipboard") },
+	{ key = "v", mods = "SUPER", action = wezterm.action.PasteFrom("Clipboard") },
+	{ key = "LeftArrow", mods = "SUPER", action = wezterm.action.ActivateTabRelative(-1) },
+	{ key = "RightArrow", mods = "SUPER", action = wezterm.action.ActivateTabRelative(1) },
+}
 
 -- Dim unfocused windows so the focused one is obvious at a glance.
 local UNFOCUSED_FOREGROUND_TEXT_HSB = { hue = 1.0, saturation = 0.25, brightness = 0.45 }

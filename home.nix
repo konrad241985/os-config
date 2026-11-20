@@ -16,11 +16,13 @@ in
     jq        # json on the command line
     lazygit
     neovim
+    nodejs_24 # Runtime for Pi, Codex, Gemini, and Playwright MCP
     # the font everything renders in
     nerd-fonts.hack
   ];
   fonts.fontconfig.enable = true;
   home.sessionVariables.EDITOR = "nvim";
+  home.sessionPath = [ "${dotfiles}/agent-tools/node_modules/.bin" ];
 
   programs.zsh = {
     enable = true;
