@@ -115,6 +115,14 @@ On this Mac, the existing Codex OAuth credentials were imported into Pi locally 
 
 Zsh adds the agent-tools and Nix user binary directories in every shell, outside Home Manager's source-once environment guard. This keeps new Herdr panes working even when their long-running server inherited an old PATH. In a shell already open during an update, run `source ~/.zshenv; rehash`.
 
+### Pi desktop control
+
+Bootstrap and rebuild install **Peekaboo 4.9.10** from the locked agent-tools dependencies and merge its `peekaboo` MCP server into Pi. It provides native macOS screenshots and UI interaction alongside the existing WebKit browser tools. Foreground control is enabled, so requested actions can focus windows and interact with your desktop. Requires macOS 15 or later.
+
+On each Mac, run `peekaboo permissions status`, then follow `peekaboo permissions grant` to enable Screen Recording and Accessibility for the reported process. Background keyboard input may also require `peekaboo permissions request event-synthesizing`. These macOS grants are local and cannot be restored by copying this repository. See the [Peekaboo permissions guide](https://github.com/openclaw/Peekaboo/blob/main/docs/permissions.md).
+
+Restart Pi or run `/reload`, then use `/mcp` to check the `peekaboo` connection. Pi supplies the model for ordinary screenshot and UI tools; Peekaboo's separate agent/provider setup is not required. Installation is CLI/MCP only, without the optional Peekaboo menu-bar app.
+
 ### Additional Pi configuration
 
 [Pi Launcher](https://github.com/kunchenguid/homebrew-tap) is also optional and installed from its owner, not declared by this config:

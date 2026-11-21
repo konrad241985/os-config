@@ -62,3 +62,18 @@ if (current?.command !== server.command || JSON.stringify(current?.args) !== JSO
   ], { env, stdio: 'inherit' });
 }
 console.log(`Agent tools ready. WebKit uses only ${browserProfile}. Sign into konrad@nodestar.ai there.`);
+
+// Desktop control is configured for Pi only; macOS permission grants stay local.
+const piMcpPath = join(home, '.pi/agent/mcp.json');
+const piMcpBefore = readFileSync(piMcpPath, 'utf8');
+const piMcp = JSON.parse(piMcpBefore);
+const peekaboo = {
+  command: join(home, '.dotfiles/agent-tools/node_modules/.bin/peekaboo'),
+  args: ['mcp', '--allow-foreground'],
+};
+if (JSON.stringify(piMcp.mcpServers.peekaboo) !== JSON.stringify(peekaboo)) {
+  piMcp.mcpServers.peekaboo = peekaboo;
+  copyFileSync(piMcpPath, `${piMcpPath}.before-agent-tools-${Date.now()}`);
+  writeFileSync(piMcpPath, `${JSON.stringify(piMcp, null, 2)}\n`, { mode: 0o600 });
+  console.log('Configured Peekaboo desktop control in Pi. Run peekaboo permissions status to check macOS grants.');
+}
