@@ -43,6 +43,22 @@ in
     };
     initContent = ''
       bindkey '^f' autosuggest-accept
+      # Ctrl-W deletes a whole whitespace-delimited word, including paths.
+      autoload -Uz backward-kill-word-match
+      zle -N backward-kill-space-word backward-kill-word-match
+      zstyle ':zle:backward-kill-space-word' word-style whitespace
+      bindkey -M emacs '^W' backward-kill-space-word
+      bindkey -M viins '^W' backward-kill-space-word
+      # Ctrl-arrows move across the same whitespace-delimited words.
+      autoload -Uz backward-word-match forward-word-match
+      zle -N backward-space-word backward-word-match
+      zle -N forward-space-word forward-word-match
+      zstyle ':zle:backward-space-word' word-style whitespace
+      zstyle ':zle:forward-space-word' word-style whitespace
+      bindkey -M emacs '^[[1;5D' backward-space-word
+      bindkey -M emacs '^[[1;5C' forward-space-word
+      bindkey -M viins '^[[1;5D' backward-space-word
+      bindkey -M viins '^[[1;5C' forward-space-word
     '';
     shellAliases = {
       ".." = "cd ..";
