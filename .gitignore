@@ -16,6 +16,10 @@ result-*
 /home/.pi/agent/auth.json
 /home/.pi/agent/**/*.backup
 
+# Orca-managed integrations and local Claude backups are not shared dotfiles
+/home/.claude/settings.json.bak
+/home/.pi/agent/extensions/orca-*.ts
+
 # Pi Calm is a runtime toggle; its local state file is never tracked
 /home/.pi/agent/calm
 
