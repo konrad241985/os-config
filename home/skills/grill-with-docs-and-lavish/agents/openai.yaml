@@ -1,0 +1,5 @@
+interface:
+  display_name: "Grill with Docs and Lavish"
+  short_description: "Grill a design, write its docs, review it in Lavish"
+policy:
+  allow_implicit_invocation: false

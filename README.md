@@ -168,7 +168,7 @@ Home Manager deliberately does not manage `~/.pi/agent` itself, or Pi authentica
 - The `engineering` and `productivity` skills from [mattpocock/skills](https://github.com/mattpocock/skills), and the `lavish` skill from [Lavish Editor](https://github.com/kunchenguid/lavish-axi). Both sources are flake inputs pinned in `flake.lock`; update them deliberately with `nix flake update mattpocock-skills lavish-axi`. Do not also install either through a plugin or `npx skills`, or every skill appears twice.
 - `home/skills/grill-with-docs-and-lavish` is this repository's own skill, alongside the unchanged upstream `grill-with-docs`. It runs the same interview and docs updates, then opens an HTML summary of what will be built in Lavish Editor. Annotate anything you do not like in the browser and send it; the agent reopens those decisions and regenerates the page until you approve it.
 
-Invoke a skill with `/<name>` in Claude Code or `/skill:<name>` in Pi. `/ask-matt` explains how the skills fit together; run `/setup-matt-pocock-skills` once in each repository before the engineering flow.
+Invoke a skill with `/<name>` in Claude Code, `/skill:<name>` in Pi, or `$<name>` in Codex. `/ask-matt` explains how the upstream skills fit together; it does not know about `grill-with-docs-and-lavish`, which you use in place of `/grill-with-docs`. Run `/setup-matt-pocock-skills` once in each repository before the engineering flow.
 
 The skills are pinned, but the Lavish CLI is not: the skills run it through `npx -y lavish-axi`, which executes the latest published release with your user permissions.
 

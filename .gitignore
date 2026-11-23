@@ -26,5 +26,8 @@ result-*
 # Playwright MCP page snapshots and console logs from local browser sessions
 .playwright-mcp/
 
+# Lavish Editor review artifacts
+.lavish/
+
 # no-mistakes local validation state - never commit in this public repo
 .no-mistakes/
