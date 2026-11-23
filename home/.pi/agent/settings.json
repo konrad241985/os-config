@@ -2,6 +2,11 @@
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-6-astra",
   "defaultThinkingLevel": "medium",
+  "enabledModels": [
+    "openai-codex/*",
+    "claude-bridge/*",
+    "grok-cli/*"
+  ],
   "images": {
     "blockImages": false
   },
