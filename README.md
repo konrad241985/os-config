@@ -31,7 +31,7 @@ Conflicting personal configuration files are backed up next to the original as `
 ## Managed setup
 
 - macOS defaults: dark appearance, key repeat, hidden Dock/menu bar/desktop icons, Finder list view, visible extensions, and tap-to-click.
-- Homebrew: **Herdr, WezTerm, Claude Code**.
+- Homebrew: **Herdr, WezTerm, Claude Code, Grok Build**.
 - Nix/Home Manager: **ripgrep, fd, fzf, jq, lazygit, Neovim, Node.js 24, Hack Nerd Font**, zsh configuration, and Starship prompt.
 - WezTerm, Neovim, Herdr, and Claude settings from `home/`.
 - Shared agent instructions for Claude, Codex, and OpenCode.
@@ -80,6 +80,12 @@ nix --extra-experimental-features 'nix-command flakes' build .#darwinConfigurati
 
 The last command builds the system closure but does not activate it or change macOS settings.
 
+The Pi Calm tests run against the Pi installed in `agent-tools/node_modules`. The TypeScript check and the real TUI smoke test need `tsc` and `tmux`, which this setup does not install; without them those two checks report `skip`. Borrow both from the locked nixpkgs for one run:
+
+```sh
+nix --extra-experimental-features 'nix-command flakes' shell --inputs-from . nixpkgs#tmux nixpkgs#typescript -c bash tests/pi-calm.test.sh
+```
+
 ## Files
 
 - `flake.nix`: fixed `konrad` account, `mac` host label, dependency wiring, and the locked rebuild executable.
@@ -93,13 +99,13 @@ The last command builds the system closure but does not activate it or change ma
 - `home/`: the copied authored configuration, not runtime data.
 - `tests/`: the original Pi extension behavior tests.
 
-`home/AGENTS.md` is the shared agent policy. The inherited `cc` alias runs Claude with `--dangerously-skip-permissions`; `co` runs Codex with `--full-auto`. Git identity is not configured by this repo; set your own name/email separately.
+`home/AGENTS.md` is the shared agent policy. The inherited `cc` alias runs Claude with `--dangerously-skip-permissions`; `co` runs Codex with `-a on-request -s workspace-write` (the replacement for the removed `--full-auto`). Git identity is not configured by this repo; set your own name/email separately.
 
 ## Coding agents and WebKit
 
-Open a new terminal after bootstrap/rebuild. Run `pi`, `codex`, `claude`, or `gemini`. Pi is the multi-provider interface; using a Claude/OpenAI/Gemini model inside Pi does not launch those vendors' separate CLI applications.
+Open a new terminal after bootstrap/rebuild. Run `pi`, `codex`, `claude`, `grok`, or `gemini`. Pi is the multi-provider interface; using a Claude, OpenAI, Gemini, or Grok model inside Pi does not launch that vendor's separate CLI application.
 
-The npm installation pins **Pi 1.6.0, Codex CLI 0.171.0, Gemini CLI 0.70.0, and Playwright MCP 0.0.86**. Claude Code continues to be managed by Homebrew. Pi uses the current official `@earendil-works/pi-coding-agent` package, which includes native MCP support. No MCP adapter is needed. Use `/login` in Pi to authenticate a supported provider and `/model` to select a model. Each standalone agent has its own sign-in flow.
+The npm installation pins **Pi 1.6.0, Codex CLI 0.171.0, Gemini CLI 0.70.0, and Playwright MCP 0.0.86**. Claude Code and Grok Build are managed by Homebrew. Pi uses the current official `@earendil-works/pi-coding-agent` package, which includes native MCP support. No MCP adapter is needed. Use `/login` in Pi to authenticate a supported provider and `/model` to select a model. Each standalone agent has its own sign-in flow. Grok Build's login is `grok login`. Claude Code's login is `claude auth login`.
 
 The `playwright-webkit` MCP server launches Playwright's WebKit browser (not the Safari app) with `--user-data-dir` fixed to `~/Library/Application Support/os-config/playwright-webkit-nodestar`. Sign into **konrad@nodestar.ai** manually in this dedicated browser. Cookies and login sessions persist between launches. No Chrome cookies are copied and no Chrome extension or connection is used. The old Chrome automation profile is left untouched, but no longer used. This configuration fixes the browser profile; it does not enforce an email-account restriction or sandbox the coding agent's filesystem access.
 
@@ -114,6 +120,14 @@ Pi defaults to the `openai-codex` provider, `gpt-6-astra`, with medium reasoning
 On this Mac, the existing Codex OAuth credentials were imported into Pi locally at the user's request and verified with a model request. No credentials are stored in this repository or imported by bootstrap. This is a one-time credential copy, not shared conversation history or ongoing synchronization: subsequent refreshes or sign-outs may require Pi to authenticate again using the command above.
 
 Zsh adds the agent-tools and Nix user binary directories in every shell, outside Home Manager's source-once environment guard. This keeps new Herdr panes working even when their long-running server inherited an old PATH. In a shell already open during an update, run `source ~/.zshenv; rehash`.
+
+### Pi desktop control
+
+Bootstrap and rebuild install **Peekaboo 4.9.10** from the locked agent-tools dependencies and merge its `peekaboo` MCP server into Pi. It provides native macOS screenshots and UI interaction alongside the existing WebKit browser tools. Foreground control is enabled, so requested actions can focus windows and interact with your desktop. Requires macOS 15 or later.
+
+On each Mac, run `peekaboo permissions status`, then follow `peekaboo permissions grant` to enable Screen Recording and Accessibility for the reported process. Background keyboard input may also require `peekaboo permissions request event-synthesizing`. These macOS grants are local and cannot be restored by copying this repository. See the [Peekaboo permissions guide](https://github.com/openclaw/Peekaboo/blob/main/docs/permissions.md).
+
+Restart Pi or run `/reload`, then use `/mcp` to check the `peekaboo` connection. Pi supplies the model for ordinary screenshot and UI tools; Peekaboo's separate agent/provider setup is not required. Installation is CLI/MCP only, without the optional Peekaboo menu-bar app.
 
 ### Additional Pi configuration
 
@@ -133,14 +147,16 @@ When enabled, Calm hides collapsed thinking and the call/result shells for Pi's 
 
 Calm never changes prompts, tool execution, model context, session data, or ordering. `/share` and `/export` use the complete stock transcript. Generic custom tools, images, and unsupported Pi transcript classes deliberately remain visible because Pi has no safe general-purpose transcript filter. If a future Pi release no longer exports the exact collapsed-thinking rendering seam, Calm logs one diagnostic and leaves only that adapter disabled; all other behavior remains available.
 
-Pi's package system declares two third-party sources in the linked global `settings.json`:
+Pi's package system declares four third-party sources in the linked global `settings.json`:
 
 - `npm:pi-web-access@0.14.0` - the exact public npm release for web access.
 - `npm:@ryan_nookpi/pi-extension-codex-fast-mode@0.2.6` - the exact public npm release from `ryan_nookpi`.
+- `npm:grok-pi@1.5.0` - registers the `grok-cli` provider. Each turn spawns the Homebrew `grok` binary with Grok's own tools disabled, and Pi executes the tools. Sign in with `grok login`. Model metadata is read from `~/.grok/models_cache.json` when that file exists; otherwise Pi lists Grok 4.6 and Grok 4.5. Select it with `/model` under `grok-cli`. This is separate from Pi's built-in `xai` provider.
+- `npm:pi-claude-bridge@0.13.0` - registers the `claude-bridge` provider through the Claude Agent SDK and the Claude Code login from `claude auth login`. Select a `claude-bridge/...` model. Pi's built-in `anthropic/...` models do not use this bridge.
 
 The versions are immutable pins, so Pi does not move them during package updates. Deliberate updates require a new source and security audit, followed by an explicit pin change in `home/.pi/agent/settings.json`. On Pi 0.82.0, global settings declarations install missing pinned packages automatically at startup. No one-time install command is required. Pi keeps the downloaded npm package trees in its own unmanaged `~/.pi/agent/npm` runtime directory, outside Home Manager and Git tracking.
 
-Both packages execute with your full user permissions and must be trusted like any other executable code.
+These packages execute with your full user permissions and must be trusted like any other executable code.
 
 Home Manager deliberately does not manage `~/.pi/agent` itself, or Pi authentication, sessions, trust decisions, caches, npm/git package trees, or any other runtime state. The model overrides contain no credentials or endpoint settings. The default provider/model are set in `settings.json`; authentication stays local. Pi itself is installed by the agent-tools setup above; a launcher is not installed.
 

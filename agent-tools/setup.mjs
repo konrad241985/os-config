@@ -46,8 +46,17 @@ for (const relative of ['.pi/agent/mcp.json', '.claude.json', '.gemini/settings.
 // Let Codex merge its own TOML, preserving desktop and unrelated settings.
 const codex = join(dir, 'node_modules/.bin/codex');
 const codexConfig = join(home, '.codex/config.toml');
-if (existsSync(codexConfig)) copyFileSync(codexConfig, `${codexConfig}.before-agent-tools-${Date.now()}`);
-execFileSync(codex, ['mcp', 'remove', 'playwright-chrome'], { env, stdio: 'inherit' });
+// Back up at most once per run, and only when Codex is about to rewrite the file.
+let codexBackedUp = false;
+const backupCodexConfig = () => {
+  if (codexBackedUp || !existsSync(codexConfig)) return;
+  copyFileSync(codexConfig, `${codexConfig}.before-agent-tools-${Date.now()}`);
+  codexBackedUp = true;
+};
+if (existsSync(codexConfig) && readFileSync(codexConfig, 'utf8').includes('playwright-chrome')) {
+  backupCodexConfig();
+  execFileSync(codex, ['mcp', 'remove', 'playwright-chrome'], { env, stdio: 'inherit' });
+}
 let current;
 try {
   current = JSON.parse(execFileSync(codex, ['mcp', 'get', 'playwright-webkit', '--json'], {
@@ -55,10 +64,24 @@ try {
   })).transport;
 } catch { /* A fresh installation has no matching server. */ }
 if (current?.command !== server.command || JSON.stringify(current?.args) !== JSON.stringify(server.args)) {
-  const path = join(home, '.codex/config.toml');
-  if (existsSync(path)) copyFileSync(path, `${path}.before-agent-tools-${Date.now()}`);
+  backupCodexConfig();
   execFileSync(codex, [
     'mcp', 'add', 'playwright-webkit', '--', server.command, ...server.args,
   ], { env, stdio: 'inherit' });
 }
 console.log(`Agent tools ready. WebKit uses only ${browserProfile}. Sign into konrad@nodestar.ai there.`);
+
+// Desktop control is configured for Pi only; macOS permission grants stay local.
+const piMcpPath = join(home, '.pi/agent/mcp.json');
+const piMcpBefore = readFileSync(piMcpPath, 'utf8');
+const piMcp = JSON.parse(piMcpBefore);
+const peekaboo = {
+  command: join(home, '.dotfiles/agent-tools/node_modules/.bin/peekaboo'),
+  args: ['mcp', '--allow-foreground'],
+};
+if (JSON.stringify(piMcp.mcpServers.peekaboo) !== JSON.stringify(peekaboo)) {
+  piMcp.mcpServers.peekaboo = peekaboo;
+  copyFileSync(piMcpPath, `${piMcpPath}.before-agent-tools-${Date.now()}`);
+  writeFileSync(piMcpPath, `${JSON.stringify(piMcp, null, 2)}\n`, { mode: 0o600 });
+  console.log('Configured Peekaboo desktop control in Pi. Run peekaboo permissions status to check macOS grants.');
+}

@@ -3,7 +3,7 @@
 // Adapted from the Firstmate project's Calm implementation.
 // Copyright (c) 2026 Kun Chen. MIT License - see the LICENSE file in this directory.
 //
-// Verified against Pi 0.82.0, which exports AgentSession and
+// Verified against Pi 1.6.0, which exports AgentSession and
 // ToolExecutionComponent. The source-aware lookup returns Pi's active definition
 // unchanged and the adapter changes only its final TUI row layout. Execution,
 // settings, SDK overrides, extension collisions, and stored results remain
@@ -93,7 +93,7 @@ export function installCalmBuiltInToolShellLayout(): void {
     return definition;
   };
 
-  ToolExecutionComponent.prototype.render = function (width: number): string[] {
+  ToolExecutionComponent.prototype.render = function (width: number): readonly string[] {
     const state = this as unknown as ToolRowPresentationState;
     const isKnownBuiltIn =
       CALM_BUILT_IN_TOOL_NAMES.has(state.toolName) &&

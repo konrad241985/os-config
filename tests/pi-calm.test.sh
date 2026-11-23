@@ -17,7 +17,8 @@
 #   degradation with one clear diagnostic;
 # - working ship: geometry, cadence, colors, resize, narrow fallback,
 #   freeze/resume, timer disposal, extension lifecycle;
-# - real Pi 0.82 TUI proofs in tmux without credentials or provider calls.
+# - real Pi TUI proofs in tmux, against the Pi pinned in agent-tools/package.json,
+#   without credentials or provider calls.
 set -u
 
 # shellcheck source=tests/lib.sh
@@ -25,7 +26,16 @@ set -u
 
 TMP_ROOT=$(dotfiles_test_tmproot pi-calm)
 CALM_DIR="$ROOT/home/.pi/agent/extensions/calm"
-PI_PACKAGE_DIR=${PI_CALM_TEST_PACKAGE_DIR:-"$(npm root -g 2>/dev/null)/@earendil-works/pi-coding-agent"}
+# Prefer the Pi pinned by agent-tools; fall back to a global npm installation.
+PI_PACKAGE_DIR=${PI_CALM_TEST_PACKAGE_DIR:-"$ROOT/agent-tools/node_modules/@earendil-works/pi-coding-agent"}
+if [ ! -f "$PI_PACKAGE_DIR/package.json" ] && [ -z "${PI_CALM_TEST_PACKAGE_DIR:-}" ]; then
+  PI_PACKAGE_DIR="$(npm root -g 2>/dev/null)/@earendil-works/pi-coding-agent"
+fi
+# The directory that holds the tested Pi, so its own pi binary wins over any other on PATH.
+PI_NODE_MODULES=$(cd "$PI_PACKAGE_DIR/../.." 2>/dev/null && pwd || true)
+if [ -n "$PI_NODE_MODULES" ] && [ -x "$PI_NODE_MODULES/.bin/pi" ]; then
+  PATH="$PI_NODE_MODULES/.bin:$PATH"
+fi
 TMUX_SOCKET="pi-calm-test-$$"
 TMUX_SESSION="pi-calm-e2e"
 
@@ -76,6 +86,16 @@ find_chrome() {
   return 1
 }
 
+# Resolve one of Pi's dependencies: nested under the package (global npm
+# installation) or hoisted beside it (agent-tools installation).
+pi_dependency_dir() {
+  if [ -e "$PI_PACKAGE_DIR/node_modules/$1" ]; then
+    printf '%s\n' "$PI_PACKAGE_DIR/node_modules/$1"
+  else
+    printf '%s\n' "$PI_NODE_MODULES/$1"
+  fi
+}
+
 # Copy the shipped extension into a fixture layout with resolvable node_modules.
 # Echoes the fixture root. Requires $1 = fixture directory.
 build_node_fixture() {
@@ -83,8 +103,8 @@ build_node_fixture() {
   mkdir -p "$fixture/calm" "$fixture/node_modules/@earendil-works"
   cp -R "$CALM_DIR/index.ts" "$CALM_DIR/lib" "$fixture/calm/"
   ln -s "$PI_PACKAGE_DIR" "$fixture/node_modules/@earendil-works/pi-coding-agent"
-  ln -s "$PI_PACKAGE_DIR/node_modules/@earendil-works/pi-tui" "$fixture/node_modules/@earendil-works/pi-tui"
-  ln -s "$PI_PACKAGE_DIR/node_modules/typebox" "$fixture/node_modules/typebox"
+  ln -s "$(pi_dependency_dir @earendil-works/pi-tui)" "$fixture/node_modules/@earendil-works/pi-tui"
+  ln -s "$(pi_dependency_dir typebox)" "$fixture/node_modules/typebox"
   printf '%s\n' '{"type":"module"}' >"$fixture/package.json"
 }
 
@@ -153,6 +173,7 @@ test_static_typescript_and_repo_wiring() {
   node --check "$ROOT/home/.pi/agent/extensions/terminal-status-title.js" \
     || fail "terminal-status-title.js has a JavaScript syntax error"
 
+  local typecheck="TypeScript typecheck skipped"
   if ! have_pi_package; then
     echo "skip: installed @earendil-works/pi-coding-agent package not found for TypeScript check"
   elif ! command -v tsc >/dev/null 2>&1; then
@@ -161,7 +182,7 @@ test_static_typescript_and_repo_wiring() {
     local fixture="$TMP_ROOT/typecheck"
     build_node_fixture "$fixture"
     mkdir -p "$fixture/node_modules/@types"
-    ln -s "$PI_PACKAGE_DIR/node_modules/@types/node" "$fixture/node_modules/@types/node"
+    ln -s "$(pi_dependency_dir @types/node)" "$fixture/node_modules/@types/node"
     cat >"$fixture/tsconfig.json" <<'JSON'
 {
   "compilerOptions": {
@@ -181,9 +202,10 @@ test_static_typescript_and_repo_wiring() {
 JSON
     (cd "$fixture" && tsc -p tsconfig.json) \
       || fail "Pi Calm extension does not typecheck under strict TypeScript"
+    typecheck="TypeScript typechecks"
   fi
 
-  pass "static wiring: Home Manager auto-load intact, TypeScript typechecks, existing JS extension parses"
+  pass "static wiring: Home Manager auto-load intact, $typecheck, existing JS extension parses"
 }
 
 test_preference_and_command() {
@@ -588,8 +610,11 @@ test_real_pi_tui_smoke() {
     echo "skip: pi or tmux not found for isolated real TUI smoke"
     return 0
   fi
-  [ "$(pi --version 2>/dev/null || true)" = "0.82.0" ] \
-    || fail "real Pi smoke requires the installed Pi 0.82.0 proof target"
+  local pinned installed
+  pinned=$(node -p 'require(process.argv[1]).dependencies["@earendil-works/pi-coding-agent"]' "$ROOT/agent-tools/package.json")
+  installed=$(pi --version 2>/dev/null || true)
+  [ "$installed" = "$pinned" ] \
+    || fail "real Pi smoke requires the Pi $pinned pinned in agent-tools/package.json, found '$installed'"
 
   fixture="$TMP_ROOT/tui-smoke"
   agent="$fixture/agent"
@@ -704,7 +729,7 @@ TS
   tmux -L "$socket" send-keys -t "$TMUX_SESSION" Enter
   sleep 0.1
   tmux -L "$socket" kill-server 2>/dev/null || true
-  pass "isolated Pi 0.82 TUI proves auto-load, /calm persistence, resize-safe working animation, and genuine transcript text without credentials"
+  pass "isolated Pi $pinned TUI proves auto-load, /calm persistence, resize-safe working animation, and genuine transcript text without credentials"
 }
 
 test_zero_coupling_and_state_file

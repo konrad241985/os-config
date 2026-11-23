@@ -41,6 +41,7 @@
     casks = [
       "wezterm"
       "claude-code"
+      "grok-build"
     ];
   };
 }
