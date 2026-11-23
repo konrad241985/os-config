@@ -23,5 +23,8 @@ result-*
 # Pi Calm is a runtime toggle; its local state file is never tracked
 /home/.pi/agent/calm
 
+# Playwright MCP page snapshots and console logs from local browser sessions
+.playwright-mcp/
+
 # no-mistakes local validation state - never commit in this public repo
 .no-mistakes/
