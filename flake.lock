@@ -38,6 +38,38 @@
         "type": "github"
       }
     },
+    "lavish-axi": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1795015641,
+        "narHash": "sha256-uqw/OZyEa5094tJF7VusnZZ1ZZIGWx8FM05RZgoQTss=",
+        "owner": "kunchenguid",
+        "repo": "lavish-axi",
+        "rev": "2b32b92ec8e8fcfb7069af3e1a89c0cabc3bf9aa",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kunchenguid",
+        "repo": "lavish-axi",
+        "type": "github"
+      }
+    },
+    "mattpocock-skills": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1795095298,
+        "narHash": "sha256-fc5+qmchp1IQ/rQP1olWKC1eC4VdYhaB7YYzC3+JBe0=",
+        "owner": "mattpocock",
+        "repo": "skills",
+        "rev": "abeeaf95660ba9e8b7c753eb38f441ca707a8823",
+        "type": "github"
+      },
+      "original": {
+        "owner": "mattpocock",
+        "repo": "skills",
+        "type": "github"
+      }
+    },
     "nix-darwin": {
       "inputs": {
         "nixpkgs": [
@@ -96,6 +128,8 @@
     "root": {
       "inputs": {
         "home-manager": "home-manager",
+        "lavish-axi": "lavish-axi",
+        "mattpocock-skills": "mattpocock-skills",
         "nix-darwin": "nix-darwin",
         "nix-homebrew": "nix-homebrew",
         "nixpkgs": "nixpkgs"

@@ -1,20 +1,20 @@
 ---
-name: grill-with-lavish
-description: The grill-with-docs interview, followed by a visual review of the agreed outcome in Lavish Editor, where the user annotates what they do not like before anything is built.
+name: grill-with-docs
+description: A relentless interview to sharpen a plan or design, which also creates docs (ADR's and glossary) as we go, then shows the agreed outcome in Lavish Editor for the user to annotate before anything is built.
 disable-model-invocation: true
 ---
 
-Run the same session as `grill-with-docs`, then put the outcome in front of the user as a page they can annotate.
+Grill the user, keep the docs current as you go, then put the outcome in front of the user as a page they can annotate.
 
 ## 1. Grill
 
-Load the `grilling` and `domain-modeling` skills and run the interview exactly as they describe. Both come from `mattpocock/skills`. If either is unavailable, stop and tell the user to install them.
+Load the `grilling` and `domain-modeling` skills and run the interview exactly as they describe.
 
 ## 2. Review the outcome in Lavish
 
 When the frontier is empty, `grilling` asks the user to confirm a shared understanding. Run this review in place of asking for that confirmation in chat. A page the user can read end to end and mark up catches misunderstandings that a chat summary hides.
 
-1. Run `npx -y lavish-axi --help` and `npx -y lavish-axi playbook plan`, plus any other playbook the content calls for. The CLI is the source of truth for the review loop, the artifact location, and the design. Follow it over anything written here.
+1. Load the `lavish` skill, then run `npx -y lavish-axi --help` and `npx -y lavish-axi playbook plan`, plus any other playbook the content calls for. The CLI is the source of truth for the review loop, the artifact location, and the design. Follow it over anything written here.
 2. Write one HTML artifact that summarises what will be built:
    - the problem and the goal, in the user's words;
    - what will be built, as behaviour the user will see;

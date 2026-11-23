@@ -82,7 +82,7 @@ The last command builds the system closure but does not activate it or change ma
 
 ## Files
 
-- `flake.nix`: fixed `konrad` account, `mac` host label, dependency wiring, and the locked rebuild executable.
+- `flake.nix`: fixed `konrad` account, `mac` host label, dependency wiring, agent skill sources, and the locked rebuild executable.
 - `flake.lock`: exact Nix dependency revisions. Update intentionally using Nix commands.
 - `configuration.nix`: macOS defaults, architecture, Homebrew migration and package lists.
 - `home.nix`: user packages, shell, prompt, personal-config backups via the flake's Home Manager settings, and live file links.
@@ -91,7 +91,7 @@ The last command builds the system closure but does not activate it or change ma
 - `agent-tools/package.json` and `package-lock.json`: exact CLI/MCP versions and resolved dependencies; installed into ignored `agent-tools/node_modules`.
 - `agent-tools/setup.mjs`: installs locked packages and merges browser MCP settings, preserving unrelated settings and credentials. Changed JSON files get timestamped local backups.
 - `home/`: the copied authored configuration, not runtime data.
-- `home/skills/`: repository-authored agent skills.
+- `skills.nix`: agent skills from pinned flake inputs and `home/skills/`, linked into Claude Code and Agent Skills clients.
 - `tests/`: the original Pi extension behavior tests.
 
 `home/AGENTS.md` is the shared agent policy. The inherited `cc` alias runs Claude with `--dangerously-skip-permissions`; `co` runs Codex with `--full-auto`. Git identity is not configured by this repo; set your own name/email separately.
@@ -157,11 +157,14 @@ Home Manager deliberately does not manage `~/.pi/agent` itself, or Pi authentica
 
 ## Agent skills
 
-`home/skills/` holds skills authored in this repository. Home Manager links each one into `~/.claude/skills` (Claude Code) and `~/.agents/skills` (Pi and other Agent Skills clients), leaving the rest of those directories to skill installers.
+`skills.nix` links agent skills into `~/.claude/skills` (Claude Code) and `~/.agents/skills` (Pi and other Agent Skills clients). Run `./rebuild.sh` to apply. Each skill is linked individually, so skills installed by other tools can share those directories.
 
-- `grill-with-lavish` runs the `grill-with-docs` interview from [mattpocock/skills](https://github.com/mattpocock/skills), then opens an HTML summary of what will be built in [Lavish Editor](https://github.com/kunchenguid/lavish-axi). Annotate anything you do not like in the browser and send it; the agent reopens those decisions and regenerates the page until you approve it. Invoke it with `/grill-with-lavish` in Claude Code or `/skill:grill-with-lavish` in Pi.
+- The `engineering` and `productivity` skills from [mattpocock/skills](https://github.com/mattpocock/skills), and the `lavish` skill from [Lavish Editor](https://github.com/kunchenguid/lavish-axi). Both sources are flake inputs pinned in `flake.lock`; update them deliberately with `nix flake update mattpocock-skills lavish-axi`. Do not also install either through a plugin or `npx skills`, or every skill appears twice.
+- `home/skills/grill-with-docs` replaces the upstream skill of the same name. It runs the same interview and docs updates, then opens an HTML summary of what will be built in Lavish Editor. Annotate anything you do not like in the browser and send it; the agent reopens those decisions and regenerates the page until you approve it.
 
-It needs the `grilling` and `domain-modeling` skills, which this repository does not install; see the mattpocock/skills README. Lavish runs on demand through `npx -y lavish-axi`, unpinned, so it executes the latest published release with your user permissions.
+Invoke a skill with `/<name>` in Claude Code or `/skill:<name>` in Pi. `/ask-matt` explains how the skills fit together; run `/setup-matt-pocock-skills` once in each repository before the engineering flow.
+
+The skills are pinned, but the Lavish CLI is not: the skills run it through `npx -y lavish-axi`, which executes the latest published release with your user permissions.
 
 ## Notes
 
