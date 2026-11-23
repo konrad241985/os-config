@@ -91,6 +91,7 @@ The last command builds the system closure but does not activate it or change ma
 - `agent-tools/package.json` and `package-lock.json`: exact CLI/MCP versions and resolved dependencies; installed into ignored `agent-tools/node_modules`.
 - `agent-tools/setup.mjs`: installs locked packages and merges browser MCP settings, preserving unrelated settings and credentials. Changed JSON files get timestamped local backups.
 - `home/`: the copied authored configuration, not runtime data.
+- `home/skills/`: repository-authored agent skills.
 - `tests/`: the original Pi extension behavior tests.
 
 `home/AGENTS.md` is the shared agent policy. The inherited `cc` alias runs Claude with `--dangerously-skip-permissions`; `co` runs Codex with `--full-auto`. Git identity is not configured by this repo; set your own name/email separately.
@@ -153,6 +154,14 @@ The versions are immutable pins, so Pi does not move them during package updates
 These packages execute with your full user permissions and must be trusted like any other executable code.
 
 Home Manager deliberately does not manage `~/.pi/agent` itself, or Pi authentication, sessions, trust decisions, caches, npm/git package trees, or any other runtime state. The model overrides contain no credentials or endpoint settings. The default provider/model are set in `settings.json`; authentication stays local. Pi itself is installed by the agent-tools setup above; a launcher is not installed.
+
+## Agent skills
+
+`home/skills/` holds skills authored in this repository. Home Manager links each one into `~/.claude/skills` (Claude Code) and `~/.agents/skills` (Pi and other Agent Skills clients), leaving the rest of those directories to skill installers.
+
+- `grill-with-lavish` runs the `grill-with-docs` interview from [mattpocock/skills](https://github.com/mattpocock/skills), then opens an HTML summary of what will be built in [Lavish Editor](https://github.com/kunchenguid/lavish-axi). Annotate anything you do not like in the browser and send it; the agent reopens those decisions and regenerates the page until you approve it. Invoke it with `/grill-with-lavish` in Claude Code or `/skill:grill-with-lavish` in Pi.
+
+It needs the `grilling` and `domain-modeling` skills, which this repository does not install; see the mattpocock/skills README. Lavish runs on demand through `npx -y lavish-axi`, unpinned, so it executes the latest published release with your user permissions.
 
 ## Notes
 

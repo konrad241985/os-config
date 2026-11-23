@@ -110,4 +110,10 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
   home.file.".config/opencode/AGENTS.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
+
+  # Repository-authored agent skills, linked one by one so skill installers can still own the rest.
+  home.file.".claude/skills/grill-with-lavish".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/grill-with-lavish";
+  home.file.".agents/skills/grill-with-lavish".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/grill-with-lavish";
 }
