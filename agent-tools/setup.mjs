@@ -46,8 +46,17 @@ for (const relative of ['.pi/agent/mcp.json', '.claude.json', '.gemini/settings.
 // Let Codex merge its own TOML, preserving desktop and unrelated settings.
 const codex = join(dir, 'node_modules/.bin/codex');
 const codexConfig = join(home, '.codex/config.toml');
-if (existsSync(codexConfig)) copyFileSync(codexConfig, `${codexConfig}.before-agent-tools-${Date.now()}`);
-execFileSync(codex, ['mcp', 'remove', 'playwright-chrome'], { env, stdio: 'inherit' });
+// Back up at most once per run, and only when Codex is about to rewrite the file.
+let codexBackedUp = false;
+const backupCodexConfig = () => {
+  if (codexBackedUp || !existsSync(codexConfig)) return;
+  copyFileSync(codexConfig, `${codexConfig}.before-agent-tools-${Date.now()}`);
+  codexBackedUp = true;
+};
+if (existsSync(codexConfig) && readFileSync(codexConfig, 'utf8').includes('playwright-chrome')) {
+  backupCodexConfig();
+  execFileSync(codex, ['mcp', 'remove', 'playwright-chrome'], { env, stdio: 'inherit' });
+}
 let current;
 try {
   current = JSON.parse(execFileSync(codex, ['mcp', 'get', 'playwright-webkit', '--json'], {
@@ -55,8 +64,7 @@ try {
   })).transport;
 } catch { /* A fresh installation has no matching server. */ }
 if (current?.command !== server.command || JSON.stringify(current?.args) !== JSON.stringify(server.args)) {
-  const path = join(home, '.codex/config.toml');
-  if (existsSync(path)) copyFileSync(path, `${path}.before-agent-tools-${Date.now()}`);
+  backupCodexConfig();
   execFileSync(codex, [
     'mcp', 'add', 'playwright-webkit', '--', server.command, ...server.args,
   ], { env, stdio: 'inherit' });

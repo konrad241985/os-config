@@ -80,6 +80,12 @@ nix --extra-experimental-features 'nix-command flakes' build .#darwinConfigurati
 
 The last command builds the system closure but does not activate it or change macOS settings.
 
+The Pi Calm tests run against the Pi installed in `agent-tools/node_modules`. The TypeScript check and the real TUI smoke test need `tsc` and `tmux`, which this setup does not install; without them those two checks report `skip`. Borrow both from the locked nixpkgs for one run:
+
+```sh
+nix --extra-experimental-features 'nix-command flakes' shell --inputs-from . nixpkgs#tmux nixpkgs#typescript -c bash tests/pi-calm.test.sh
+```
+
 ## Files
 
 - `flake.nix`: fixed `konrad` account, `mac` host label, dependency wiring, and the locked rebuild executable.
@@ -93,7 +99,7 @@ The last command builds the system closure but does not activate it or change ma
 - `home/`: the copied authored configuration, not runtime data.
 - `tests/`: the original Pi extension behavior tests.
 
-`home/AGENTS.md` is the shared agent policy. The inherited `cc` alias runs Claude with `--dangerously-skip-permissions`; `co` runs Codex with `--full-auto`. Git identity is not configured by this repo; set your own name/email separately.
+`home/AGENTS.md` is the shared agent policy. The inherited `cc` alias runs Claude with `--dangerously-skip-permissions`; `co` runs Codex with `-a on-request -s workspace-write` (the replacement for the removed `--full-auto`). Git identity is not configured by this repo; set your own name/email separately.
 
 ## Coding agents and WebKit
 
