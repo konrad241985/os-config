@@ -1,10 +1,10 @@
 ---
-name: grill-with-docs
-description: A relentless interview to sharpen a plan or design, which also creates docs (ADR's and glossary) as we go, then shows the agreed outcome in Lavish Editor for the user to annotate before anything is built.
+name: grill-with-docs-and-lavish
+description: The grill-with-docs interview (a relentless interview that also creates the ADRs and glossary), followed by a Lavish Editor review where the user annotates the agreed outcome before anything is built.
 disable-model-invocation: true
 ---
 
-Grill the user, keep the docs current as you go, then put the outcome in front of the user as a page they can annotate.
+This is `grill-with-docs` followed by `lavish`: grill the user, keep the docs current as you go, then put the outcome in front of the user as a page they can annotate.
 
 ## 1. Grill
 

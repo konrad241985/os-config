@@ -15,9 +15,9 @@ let
     // skillsIn "${inputs.mattpocock-skills}/skills/productivity"
     // {
       lavish = "${inputs.lavish-axi}/skills/lavish";
-      # Replaces the upstream skill of the same name: adds a Lavish review of the outcome.
-      grill-with-docs =
-        config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/grill-with-docs";
+      # This repository's own skill: grill-with-docs, then a Lavish review of the outcome.
+      grill-with-docs-and-lavish =
+        config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/skills/grill-with-docs-and-lavish";
     };
 in
 {
