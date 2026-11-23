@@ -12,9 +12,15 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
+
+    # Agent skill sources, linked into the agents by skills.nix.
+    mattpocock-skills.url = "github:mattpocock/skills";
+    mattpocock-skills.flake = false;
+    lavish-axi.url = "github:kunchenguid/lavish-axi";
+    lavish-axi.flake = false;
   };
 
-  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs }:
+  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, ... }:
     let
       # Personal configuration: bootstrap and rebuild require this same account.
       user = "konrad";
@@ -32,7 +38,7 @@
             home-manager.useGlobalPkgs = true;
             home-manager.backupFileExtension = "before-nix-darwin";
             home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit user; };
+            home-manager.extraSpecialArgs = { inherit user inputs; };
             home-manager.users.${user} = import ./home.nix;
           }
         ];
