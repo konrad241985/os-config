@@ -104,7 +104,7 @@ nix --extra-experimental-features 'nix-command flakes' shell --inputs-from . nix
 
 ## Coding agents and WebKit
 
-Open a new terminal after bootstrap/rebuild. Run `pi`, `codex`, `claude`, `grok`, or `gemini`. Pi is the multi-provider interface; using a Claude, OpenAI, Gemini, or Grok model inside Pi does not launch that vendor's separate CLI application.
+Open a new terminal after bootstrap/rebuild. Run `pi`, `codex`, `claude`, `grok`, `gemini`, or `agy`. Pi is the multi-provider interface; using a Claude, OpenAI, Gemini, or Grok model inside Pi does not launch that vendor's separate CLI application. `agy` is the Antigravity CLI, which is how a personal Google account reaches Gemini models.
 
 The npm installation pins **Pi 1.6.0, Codex CLI 0.171.0, Gemini CLI 0.70.0, and Playwright MCP 0.0.86**. Claude Code and Grok Build are managed by Homebrew. Pi uses the current official `@earendil-works/pi-coding-agent` package, which includes native MCP support. No MCP adapter is needed. Use `/login` in Pi to authenticate a supported provider and `/model` to select a model. Each standalone agent has its own sign-in flow. Grok Build's login is `grok login`. Claude Code's login is `claude auth login`.
 
@@ -118,11 +118,13 @@ To reapply just agent installations/settings after Nix activation, run `node age
 
 Pi defaults to the `openai-codex` provider, `gpt-6-astra`, with medium reasoning, matching the Codex CLI configuration at setup time. This uses Pi's native provider, not a subprocess running Codex CLI. Authenticate once with `pi auth login openai-codex` using your Codex account; credentials remain in local `~/.pi/agent/auth.json`. Later changes to Codex CLI's model do not automatically change Pi's default.
 
-Google Gemini models are included through `google/*` in `enabledModels`. This is Pi's built-in `google` provider, separate from the `gemini` CLI. Authenticate once with `pi auth login google` and a Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey). Pi stores that key only in local `~/.pi/agent/auth.json`. An exported `GEMINI_API_KEY` works instead and is not written into the repository. Bootstrap does not import either credential. Google Vertex stays disabled; it needs its own Google Cloud project login.
+Google models for a personal Google account are used through the Antigravity CLI, `agy`. Sign in once with `agy` and choose Google OAuth. The login stays in the macOS keychain. This repository does not store it, and bootstrap does not import it. The binary is installed at `~/.local/bin/agy` by the [Antigravity installer](https://antigravity.google/cli/install.sh). Home Manager adds that directory to `PATH`. Gemini CLI's "Sign in with Google" option no longer accepts individual accounts.
+
+Pi's built-in `google/*` models stay enabled for a Gemini API key. Authenticate that path with `pi auth login google` or `GEMINI_API_KEY`. The key stays in local `~/.pi/agent/auth.json` and is not written into the repository. A personal Google login does not fill this provider. Google Vertex stays disabled.
 
 On this Mac, the existing Codex OAuth credentials were imported into Pi locally at the user's request and verified with a model request. No credentials are stored in this repository or imported by bootstrap. This is a one-time credential copy, not shared conversation history or ongoing synchronization: subsequent refreshes or sign-outs may require Pi to authenticate again using the command above.
 
-Zsh adds the agent-tools and Nix user binary directories in every shell, outside Home Manager's source-once environment guard. This keeps new Herdr panes working even when their long-running server inherited an old PATH. In a shell already open during an update, run `source ~/.zshenv; rehash`.
+Zsh adds `~/.local/bin`, the agent-tools directory, and the Nix user binary directory in every shell, outside Home Manager's source-once environment guard. This keeps new Herdr panes working even when their long-running server inherited an old PATH. In a shell already open during an update, run `source ~/.zshenv; rehash`.
 
 ### Pi desktop control
 

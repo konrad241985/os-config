@@ -24,7 +24,10 @@ in
   ];
   fonts.fontconfig.enable = true;
   home.sessionVariables.EDITOR = "nvim";
-  home.sessionPath = [ "${dotfiles}/agent-tools/node_modules/.bin" ];
+  home.sessionPath = [
+    "${dotfiles}/agent-tools/node_modules/.bin"
+    "${config.home.homeDirectory}/.local/bin"
+  ];
 
   programs.zsh = {
     enable = true;
@@ -32,7 +35,7 @@ in
     # with an older PATH. Apply this in each shell, outside that guarded script.
     envExtra = ''
       typeset -U path PATH
-      path=("$HOME/.dotfiles/agent-tools/node_modules/.bin" "/etc/profiles/per-user/${user}/bin" $path)
+      path=("$HOME/.local/bin" "$HOME/.dotfiles/agent-tools/node_modules/.bin" "/etc/profiles/per-user/${user}/bin" $path)
       export PATH
     '';
     autosuggestion.enable = true;      # ghost text from history
