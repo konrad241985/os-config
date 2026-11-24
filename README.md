@@ -118,6 +118,8 @@ To reapply just agent installations/settings after Nix activation, run `node age
 
 Pi defaults to the `openai-codex` provider, `gpt-6-astra`, with medium reasoning, matching the Codex CLI configuration at setup time. This uses Pi's native provider, not a subprocess running Codex CLI. Authenticate once with `pi auth login openai-codex` using your Codex account; credentials remain in local `~/.pi/agent/auth.json`. Later changes to Codex CLI's model do not automatically change Pi's default.
 
+Google Gemini models are included through `google/*` in `enabledModels`. This is Pi's built-in `google` provider, separate from the `gemini` CLI. Authenticate once with `pi auth login google` and a Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey). Pi stores that key only in local `~/.pi/agent/auth.json`. An exported `GEMINI_API_KEY` works instead and is not written into the repository. Bootstrap does not import either credential. Google Vertex stays disabled; it needs its own Google Cloud project login.
+
 On this Mac, the existing Codex OAuth credentials were imported into Pi locally at the user's request and verified with a model request. No credentials are stored in this repository or imported by bootstrap. This is a one-time credential copy, not shared conversation history or ongoing synchronization: subsequent refreshes or sign-outs may require Pi to authenticate again using the command above.
 
 Zsh adds the agent-tools and Nix user binary directories in every shell, outside Home Manager's source-once environment guard. This keeps new Herdr panes working even when their long-running server inherited an old PATH. In a shell already open during an update, run `source ~/.zshenv; rehash`.

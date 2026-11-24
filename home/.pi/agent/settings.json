@@ -5,7 +5,8 @@
   "enabledModels": [
     "openai-codex/*",
     "claude-bridge/*",
-    "grok-cli/*"
+    "grok-cli/*",
+    "google/*"
   ],
   "images": {
     "blockImages": false
