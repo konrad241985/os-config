@@ -1,0 +1,196 @@
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { supportedThinkingLevels, type GrokModelInfo } from "./models.js";
+import {
+	PROVIDER_ID,
+	checkCliStatus,
+	cliStatusLines,
+	grokBin,
+	grokHome,
+	modelsCachePath,
+	readCachedModels,
+	registerGrokProviderBridge,
+	setupGuidance,
+} from "./bridge.js";
+import { grokHarnessStateIn, grokInstallGuidance, grokAuthGuidance } from "./harness.js";
+
+function readCachedModelsForDisplay(): GrokModelInfo[] {
+	return readCachedModels();
+}
+
+let lastCliAvailable: boolean | undefined;
+let lastAuthPresent: boolean | undefined;
+
+const GROK_PANEL_STATUS = "Status (cached)";
+const GROK_PANEL_CONFIG = "Configuration (environment presence)";
+const GROK_PANEL_MODELS = "Models (cached)";
+const GROK_PANEL_BACK = "Back";
+const GROK_PANEL_CLOSE = "Close";
+
+function panelEnvState(name: string): string {
+	return process.env[name]?.trim() ? "set" : "default";
+}
+
+function cachedPanelState(value: boolean | undefined, positive: string, negative: string): string {
+	if (value === undefined) return "not checked";
+	return value ? positive : negative;
+}
+
+export async function showGrokPanelList(ctx: any, title: string, lines: string[]): Promise<"back" | "close"> {
+	// Keep each ASCII detail to at most two selector rows at 40 columns.
+	const records = (lines.length ? lines : ["No details available."]).flatMap((line) =>
+		line ? Array.from({ length: Math.ceil(line.length / 40) }, (_, index) => line.slice(index * 40, (index + 1) * 40)) : [""],
+	);
+	let page = 0;
+	while (true) {
+		const detail = `• ${records[page]}`;
+		const options = [
+			detail,
+			...(page > 0 ? ["Previous"] : []),
+			...(page < records.length - 1 ? ["Next"] : []),
+			GROK_PANEL_BACK,
+			GROK_PANEL_CLOSE,
+		];
+		const counter = ` (${page + 1}/${records.length})`;
+		let heading = title;
+		if (heading.length + counter.length > 38) heading = heading.replace(/\s+\([^()]*\)$/u, "");
+		if (heading.length + counter.length > 38) heading = heading.slice(0, Math.min(30, 38 - counter.length));
+		const choice = await ctx.ui.select(`${heading}${counter}`, options);
+		if (choice === undefined || choice === GROK_PANEL_CLOSE) return "close";
+		if (choice === GROK_PANEL_BACK) return "back";
+		if (choice === "Previous" && page > 0) page -= 1;
+		if (choice === "Next" && page < records.length - 1) page += 1;
+	}
+}
+
+async function showGrokPanel(ctx: any): Promise<void> {
+	while (true) {
+		const choice = await ctx.ui.select("grok-pi (read-only)", [
+			GROK_PANEL_STATUS,
+			GROK_PANEL_CONFIG,
+			GROK_PANEL_MODELS,
+			GROK_PANEL_CLOSE,
+		]);
+		if (choice === undefined || choice === GROK_PANEL_CLOSE) return;
+
+		if (choice === GROK_PANEL_STATUS) {
+			const detail = await showGrokPanelList(ctx, "Grok CLI status (cached)", [
+				`CLI: ${cachedPanelState(lastCliAvailable, "available", "unavailable")}`,
+				`Authentication: ${cachedPanelState(lastAuthPresent, "configured", "not configured")}`,
+				`Cached models: ${readCachedModelsForDisplay().length}`,
+			]);
+			if (detail === "close") return;
+			continue;
+		}
+
+		if (choice === GROK_PANEL_CONFIG) {
+			const detail = await showGrokPanelList(ctx, "grok-pi configuration (environment presence)", [
+				`GROK_PI_BIN: ${panelEnvState("GROK_PI_BIN")}`,
+				`GROK_PI_MODELS: ${panelEnvState("GROK_PI_MODELS")}`,
+				`GROK_PI_TIMEOUT_MS: ${panelEnvState("GROK_PI_TIMEOUT_MS")}`,
+				`GROK_PI_HOME: ${panelEnvState("GROK_PI_HOME")}`,
+			]);
+			if (detail === "close") return;
+			continue;
+		}
+
+		if (choice === GROK_PANEL_MODELS) {
+			const models = readCachedModelsForDisplay();
+			const detail = await showGrokPanelList(ctx, "Grok models (cached)", [
+				`Cached models: ${models.length}`,
+				"IDs hidden to avoid exposing configured values",
+			]);
+			if (detail === "close") return;
+			continue;
+		}
+
+		return;
+	}
+}
+
+export default function grokPiExtension(pi: ExtensionAPI) {
+	registerGrokProviderBridge(pi);
+
+	pi.on("session_start", async (_event: any, ctx: any) => {
+		lastCliAvailable = undefined;
+		lastAuthPresent = undefined;
+		const harness = grokHarnessStateIn(grokHome());
+		lastAuthPresent = harness.authPresent;
+		if (!harness.installed) {
+			ctx.ui.notify(grokInstallGuidance(), "warning");
+			return;
+		}
+		if (!harness.authPresent) {
+			ctx.ui.notify(grokAuthGuidance(), "warning");
+			return;
+		}
+		const status = await checkCliStatus();
+		lastCliAvailable = status.ok;
+		if (!status.ok) {
+			ctx.ui.notify(`grok-pi: ${setupGuidance(status.detail ?? status.summary)}`, "warning");
+			return;
+		}
+		ctx.ui.notify(
+			`grok-pi: registered ${readCachedModelsForDisplay().length} model(s); every turn spawns the local \`grok\` CLI. Use /model or --provider ${PROVIDER_ID}.`,
+			"info",
+		);
+	});
+
+	pi.registerCommand("grok-pi", {
+		description: "Grok CLI bridge status and setup help",
+		handler: async (args: string, ctx: any) => {
+			const trimmedArgs = args.trim();
+			if (trimmedArgs.length === 0 && ctx.mode === "tui" && ctx.hasUI) {
+				await showGrokPanel(ctx);
+				return;
+			}
+
+			const parts = trimmedArgs.split(/\s+/).filter(Boolean);
+			const sub = parts[0] ?? "status";
+
+			if (sub === "status") {
+				const status = await checkCliStatus();
+				lastCliAvailable = status.ok;
+				for (const line of cliStatusLines(status)) ctx.ui.notify(line, status.ok ? "info" : "warning");
+				return;
+			}
+
+			if (sub === "models") {
+				for (const info of readCachedModelsForDisplay()) {
+					const levels = supportedThinkingLevels(info);
+					const thinking = levels.length > 0 ? levels.join(", ") : "off";
+					ctx.ui.notify(`${PROVIDER_ID}/${info.model} - ${info.name ?? info.model} [${thinking}]`, "info");
+				}
+				ctx.ui.notify(`Also run: pi --list-models ${PROVIDER_ID}`, "info");
+				return;
+			}
+
+			if (sub === "test") {
+				const smokeModel = readCachedModelsForDisplay()[0]?.model ?? "grok-4.6";
+				ctx.ui.notify(
+					`Run: pi -p --provider ${PROVIDER_ID} --model ${smokeModel} --thinking medium "Reply with exactly OK"`,
+					"info",
+				);
+				ctx.ui.notify(
+					`Direct transport check: ${grokBin()} --single "Reply with exactly OK" --model ${smokeModel} --tools "" --disable-web-search --permission-mode dontAsk --output-format json`,
+					"info",
+				);
+				return;
+			}
+
+			if (sub === "help") {
+				ctx.ui.notify("Usage: /grok-pi [status|models|test|help]", "info");
+				ctx.ui.notify("Every model turn spawns the official `grok` CLI (`grok --prompt-file`); no direct HTTP calls.", "info");
+				ctx.ui.notify("Auth and token refresh stay inside the Grok CLI. This extension never reads ~/.grok/auth.json.", "info");
+				ctx.ui.notify(`Model metadata (read-only): ${modelsCachePath()}`, "info");
+				ctx.ui.notify("Set GROK_PI_BIN to override the grok executable.", "info");
+				ctx.ui.notify("Set GROK_PI_MODELS for a comma-separated model list override.", "info");
+				ctx.ui.notify("Set GROK_PI_TIMEOUT_MS for per-turn timeout (default 300000).", "info");
+				ctx.ui.notify("Set GROK_PI_HOME to override the Grok harness directory (~/.grok); also relocates the model cache.", "info");
+				ctx.ui.notify("Thinking: Shift+Tab, /settings, or --thinking <low|medium|high|xhigh>", "info");
+				return;
+			}
+
+			ctx.ui.notify(`Unknown /grok-pi subcommand: ${sub}. Try /grok-pi help`, "warning");
+		},
+	});
+}
