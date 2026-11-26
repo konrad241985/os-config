@@ -23,8 +23,11 @@ if command -v nix >/dev/null 2>&1; then
   echo "==> Nix already installed"
 else
   echo "==> Installing Determinate Nix"
-  curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix \
-    | sh -s -- install --no-confirm
+  NIX_INSTALLER="$(mktemp)"
+  curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix -o "$NIX_INSTALLER"
+  chmod +x "$NIX_INSTALLER"
+  "$NIX_INSTALLER" install --no-confirm
+  rm -f "$NIX_INSTALLER"
   # shellcheck disable=SC1091
   . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
 fi

@@ -16,7 +16,7 @@ When the frontier is empty, `grilling` asks the user to confirm a shared underst
 
 ### Build the page
 
-1. Load the `lavish` skill, then run `npx -y lavish-axi --help` and `npx -y lavish-axi playbook plan`. The CLI is the source of truth for its commands, the review loop, where the artifact lives, and visual design. This skill decides what the page contains and what it is for.
+1. Load the `lavish` skill, then run `npx -y lavish-axi@0.6.0 --help` and `npx -y lavish-axi@0.6.0 playbook plan`. The CLI is the source of truth for its commands, the review loop, where the artifact lives, and visual design. This skill decides what the page contains and what it is for.
 2. Write one HTML artifact that summarises the outcome:
    - the problem and the goal, in the user's words;
    - what will be built, as behaviour the user will see, or the decision reached when nothing user-visible is built;
@@ -32,7 +32,7 @@ When the frontier is empty, `grilling` asks the user to confirm a shared underst
 
 ### Run the review loop
 
-6. Open the page with `npx -y lavish-axi <html-file>` and wait for feedback the way `--help` describes. The wait lasts as long as the user takes to read, so give the poll the longest timeout your harness allows, and run it again if it times out.
+6. Open the page with `npx -y lavish-axi@0.6.0 <html-file>` and wait for feedback the way `--help` describes. The wait lasts as long as the user takes to read, so give the poll the longest timeout your harness allows, and run it again if it times out.
 7. Sort each annotation by what it asks for:
    - a different decision: reopen it. A changed decision can change the ones that hang off it, so recompute the frontier and ask any new questions as a further `grilling` round in chat. The user is looking at the browser, so first post a Lavish reply saying the questions are waiting in chat;
    - different wording or layout: fix the page;

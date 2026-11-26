@@ -1,5 +1,5 @@
 // Run after nix-darwin activation, as the user, never as root.
-import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync, renameSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -22,8 +22,14 @@ execFileSync(process.execPath, [join(dir, 'node_modules/playwright/cli.js'), 'in
 });
 
 // This is a separate WebKit data directory, never a Chrome profile.
-// Sign into konrad@nodestar.ai manually; the directory does not enforce account identity.
-const browserProfile = join(home, 'Library/Application Support/os-config/playwright-webkit-nodestar');
+// Sign in manually; the directory does not enforce account identity.
+const oldBrowserProfile = join(home, 'Library/Application Support/os-config/playwright-webkit-nodestar');
+const browserProfile = join(home, 'Library/Application Support/os-config/playwright-webkit');
+// Migrate the old profile directory to the new name on the first run after this change.
+if (existsSync(oldBrowserProfile) && !existsSync(browserProfile)) {
+  renameSync(oldBrowserProfile, browserProfile);
+  console.log(`Migrated WebKit profile from ${oldBrowserProfile} to ${browserProfile}`);
+}
 mkdirSync(browserProfile, { recursive: true, mode: 0o700 });
 const server = {
   command: '/etc/profiles/per-user/konrad/bin/node',
@@ -69,7 +75,7 @@ if (current?.command !== server.command || JSON.stringify(current?.args) !== JSO
     'mcp', 'add', 'playwright-webkit', '--', server.command, ...server.args,
   ], { env, stdio: 'inherit' });
 }
-console.log(`Agent tools ready. WebKit uses only ${browserProfile}. Sign into konrad@nodestar.ai there.`);
+console.log(`Agent tools ready. WebKit uses only ${browserProfile}. Sign in there.`);
 
 // Desktop control is configured for Pi only; macOS permission grants stay local.
 const piMcpPath = join(home, '.pi/agent/mcp.json');

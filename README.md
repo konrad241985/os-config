@@ -108,9 +108,9 @@ Open a new terminal after bootstrap/rebuild. Run `pi`, `codex`, `claude`, `grok`
 
 The npm installation pins **Pi 1.6.0, Codex CLI 0.171.0, Gemini CLI 0.70.0, and Playwright MCP 0.0.86**. Claude Code and Grok Build are managed by Homebrew. Pi uses the current official `@earendil-works/pi-coding-agent` package, which includes native MCP support. No MCP adapter is needed. Use `/login` in Pi to authenticate a supported provider and `/model` to select a model. Each standalone agent has its own sign-in flow. Grok Build's login is `grok login`. Claude Code's login is `claude auth login`.
 
-The `playwright-webkit` MCP server launches Playwright's WebKit browser (not the Safari app) with `--user-data-dir` fixed to `~/Library/Application Support/os-config/playwright-webkit-nodestar`. Sign into **konrad@nodestar.ai** manually in this dedicated browser. Cookies and login sessions persist between launches. No Chrome cookies are copied and no Chrome extension or connection is used. The old Chrome automation profile is left untouched, but no longer used. This configuration fixes the browser profile; it does not enforce an email-account restriction or sandbox the coding agent's filesystem access.
+The `playwright-webkit` MCP server launches Playwright's WebKit browser (not the Safari app) with `--user-data-dir` fixed to `~/Library/Application Support/os-config/playwright-webkit`. Sign in manually in this dedicated browser. Cookies and login sessions persist between launches. No Chrome cookies are copied and no Chrome extension or connection is used. The old Chrome automation profile is left untouched, but no longer used. This configuration fixes the browser profile; it does not enforce an email-account restriction or sandbox the coding agent's filesystem access.
 
-Ask an agent: "Use playwright-webkit to check my app in the Nodestar browser." In Pi, `/mcp` shows connection status and available tools. **Only one agent should use the persistent profile at a time.** Close/disconnect its browser before switching agents. Each client starts a local MCP process; no permanent background service or public network listener is configured.
+Ask an agent: "Use playwright-webkit to check my app in the browser." In Pi, `/mcp` shows connection status and available tools. **Only one agent should use the persistent profile at a time.** Close/disconnect its browser before switching agents. Each client starts a local MCP process; no permanent background service or public network listener is configured.
 
 User-level configuration is merged into `~/.pi/agent/mcp.json`, `~/.codex/config.toml`, `~/.claude.json`, and `~/.gemini/settings.json`. These files remain local, including existing account credentials. The dedicated browser directory is outside the repository and is never committed. Bootstrap cannot reproduce personal logins. Restart existing agent sessions after changing MCP configuration. The old Playwright extension is no longer needed and should be removed from the personal Chrome profile.
 
@@ -174,7 +174,7 @@ Home Manager deliberately does not manage `~/.pi/agent` itself, or Pi authentica
 
 Invoke a skill with `/<name>` in Claude Code, `/skill:<name>` in Pi, or `$<name>` in Codex. `/ask-matt` explains how the upstream skills fit together; it does not know about `grill-with-docs-and-lavish`, which you use in place of `/grill-with-docs`. Run `/setup-matt-pocock-skills` once in each repository before the engineering flow.
 
-The skills are pinned, but the Lavish CLI is not: the skills run it through `npx -y lavish-axi`, which executes the latest published release with your user permissions.
+The skills are pinned, but the Lavish CLI is not: the skills run it through `npx -y lavish-axi@0.6.0`, which executes the pinned release with your user permissions.
 
 ## Notes
 
